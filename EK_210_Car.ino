@@ -15,6 +15,13 @@ int enableLeftMotor=5;
 int leftMotorPin1=4;  // formerly 9
 int leftMotorPin2=3;  // formerly 10
 
+//LEDs
+const int PIN_LED_RED = 12;
+const int PIN_LED_GREEN = 13;
+
+// Buzzer
+const int BUZZER_PIN = 1; //buzzer to arduino pin 9
+
 
 void setup() {
   pinMode(trigPin, OUTPUT);  // Set Trig (Ultrasonic)
@@ -32,8 +39,17 @@ void setup() {
   pinMode(leftMotorPin1, OUTPUT);
   pinMode(leftMotorPin2, OUTPUT);
 
+  //LEDS
+  pinMode(PIN_LED_RED, OUTPUT);
+  pinMode(PIN_LED_GREEN, OUTPUT);
+
+  // Buzzer
+  pinMode(BUZZER_PIN, OUTPUT); // Set pin 1 as buzzer output
+
   rotateMotor(0,0);
 }
+
+/*____________________________________________________________________________________________________________________*/
 
 void loop() {
   int distance;
@@ -44,26 +60,65 @@ void loop() {
   if (distance <= 16 ){
     // STOP MOTORS
     rotateMotor(0, 0);
+    // SOUND BUZZER
+
+    tone(BUZZER_PIN, 1300, 200);  // Play a 1000 Hz tone for 200 ms
+    delay(200);  // Pause briefly
+    tone(BUZZER_PIN, 1000, 200);  // Play a 1200 Hz tone for 200 ms
+    delay(200);  // Pause briefly
+    noTone(BUZZER_PIN);           // Stop the tone
+
+    // RED LED HIGH
+    digitalWrite (PIN_LED_GREEN, LOW);
+    digitalWrite (PIN_LED_RED, HIGH);
 
   } else if ((isLeftHigh(threshold, sl) && !isRightHigh(threshold, sr))) {
     // TURN LEFT
   
     rotateMotor(MOTOR_SPEED, -MOTOR_SPEED); 
+
+    // GREEN LED HIGH
+    digitalWrite (PIN_LED_GREEN, HIGH);
+    digitalWrite (PIN_LED_RED, LOW);
     
   } else if ((isRightHigh(threshold, sr) && !isLeftHigh(threshold, sl)) ) {
     // TURN RIGHT
 
     rotateMotor(-MOTOR_SPEED, MOTOR_SPEED);
 
+    // GREEN LED HIGH
+    digitalWrite (PIN_LED_GREEN, HIGH);
+    digitalWrite (PIN_LED_RED, LOW);
+
   } else if ((!isRightHigh(threshold, sr) && !isLeftHigh(threshold, sl))) {
     // GO STRAIGHT: Both are low
 
     rotateMotor(MOTOR_SPEED, MOTOR_SPEED);
 
+    // GREED LED HIGH    
+    digitalWrite (PIN_LED_GREEN, HIGH);
+    digitalWrite (PIN_LED_RED, LOW);
+
   } else if ((isRightHigh(threshold, sr) && isLeftHigh(threshold, sl))) {
     // FINISH LINE: Both are high, stop motors
 
     rotateMotor(0, 0);
+
+    // RED LED HIGH:
+    digitalWrite (PIN_LED_GREEN, LOW);
+    digitalWrite (PIN_LED_RED, HIGH);
+
+    tone(BUZZER_PIN, 600, 200);  // Low tone for 200 ms
+    delay(100);                  // Delay
+    tone(BUZZER_PIN, 800, 200);  // Med tone for 200 ms
+    delay(100);
+    tone(BUZZER_PIN, 1000, 400); // High tone 400 ms 
+    delay(200);
+    tone(BUZZER_PIN, 1200, 200); // Higher tone for 200 ms
+    delay(100);
+    tone(BUZZER_PIN, 1000, 300); // Descend slightly for a smooth ending
+    delay(300);
+    noTone(BUZZER_PIN);          // Stop the tone
     
   } else {
     // Undefined behavior, catch this exception
@@ -156,4 +211,3 @@ void rotateMotor(int rightMotorSpeed, int leftMotorSpeed)
   analogWrite(enableLeftMotor, abs(leftMotorSpeed));    
 }
 
-/*____________________________________________________________________________________________________________________*/
